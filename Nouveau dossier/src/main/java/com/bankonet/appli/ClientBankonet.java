@@ -56,7 +56,8 @@ public class ClientBankonet {
 			
 			List<String> actions=Arrays.asList("0. Arrêter le programme",
 											"1. Consulter les soldes des comptes",
-											"2. Effectuer un dépôt");
+											"2. Effectuer un dépôt",
+											"3. Effectuer un retrait");
 
 			for (String string : actions) {
 				System.out.println(string);
@@ -81,6 +82,9 @@ public class ClientBankonet {
 					break;
 				case 2:
 					effectuerDepot();
+					break;
+				case 3:
+					effectuerRetrait();
 					break;
 				default:
 					break;
@@ -159,5 +163,58 @@ public class ClientBankonet {
 									infosClient);
 		
 		System.out.println("Nouveau solde : "+Integer.toString(credit));
+	}
+	
+	private void effectuerRetrait(){
+		List<Document> listCompteCourant =(List<Document>) infosClient.get("comptesCourants");
+		int cpt=0;
+		if(listCompteCourant!=null){
+			for (Document document : listCompteCourant) {
+				
+				System.out.println("Compte courant "+cpt
+									+", Libelle : "+document.getString("libelle")
+									+", solde : "+Integer.toString(document.getInteger("solde")));
+				cpt++;
+			}
+		}else{
+			System.out.println("Vous n'avez pas de compte courant.");
+		}
+		
+		int compteChoisi=-1;
+		System.out.println("Veuillez choisir un compte pour votre retrait.");
+		while(compteChoisi==-1){
+			//check integer input
+			while(!scanEntries.hasNextInt()){
+				scanEntries.next();
+			}
+			
+			compteChoisi=scanEntries.nextInt();
+			if(compteChoisi>=listCompteCourant.size() || compteChoisi<0){
+				compteChoisi=-1;
+			}
+		}
+		System.out.println("Veuillez saisir un montant à retirer. 0 pour revenir en arrière.");
+		//check integer input
+		while(!scanEntries.hasNextInt()){
+			scanEntries.next();
+		}
+		int retrait=scanEntries.nextInt();
+		if(retrait<=0){
+			System.out.println("Retrait annulé");
+		}else if(retrait>listCompteCourant.get(compteChoisi).getInteger("solde")){
+			System.out.println("Retrait impossible");
+		}else{
+			int soldeActuel=listCompteCourant.get(compteChoisi).getInteger("solde")-retrait;
+			
+			listCompteCourant.get(compteChoisi).put("solde", soldeActuel);
+			/*clientsCollection.replaceOne({"_id":infosClient.getObjectId("_id")},
+										);*/
+			infosClient.put("comptesCourant", listCompteCourant.get(compteChoisi));
+			
+			clientsCollection.replaceOne(eq("_id",infosClient.getObjectId("_id")),
+										infosClient);
+			
+			System.out.println("Nouveau solde : "+Integer.toString(soldeActuel));
+		}
 	}
 }
