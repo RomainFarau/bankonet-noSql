@@ -11,12 +11,8 @@ import java.util.logging.Logger;
 import org.bson.Document;
 
 import com.bankonet.DAO.ClientDao;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-
 
 public class ConseillerBankonet {
 	
@@ -127,22 +123,26 @@ public class ConseillerBankonet {
 			listCompteEpargne =(List<Document>) docTmp.get("comptesEpargne");
 			if(listCompteEpargne==null){
 				if(listCompteCourant==null){
-					System.out.println("Nom :"+docTmp.getString("nom")
+					System.out.println("Identifiant :"+docTmp.get("_id")
+								+" Nom :"+docTmp.getString("nom")
 								+", prenom: "+docTmp.getString("prenom")
 								+", login: "+docTmp.getString("login"));
 				}else{
-					System.out.println("Nom :"+docTmp.getString("nom")
+					System.out.println("Identifiant :"+docTmp.get("_id")
+							+" Nom :"+docTmp.getString("nom")
 							+", prenom: "+docTmp.getString("prenom")
 							+", login: "+docTmp.getString("login")
 							+", nombre de comptes courants :"+Integer.toString(listCompteCourant.size()));
 				}
 			}else if(listCompteCourant==null){
-				System.out.println("Nom :"+docTmp.getString("nom")
+				System.out.println("Identifiant :"+docTmp.get("_id")
+						+" Nom :"+docTmp.getString("nom")
 						+", prenom: "+docTmp.getString("prenom")
 						+", login: "+docTmp.getString("login")
 						+", nombre de comptes épargnes :"+Integer.toString(listCompteEpargne.size()));
 			}else{
-				System.out.println("Nom :"+docTmp.getString("nom")
+				System.out.println("Identifiant :"+docTmp.get("_id")
+						+" Nom :"+docTmp.getString("nom")
 						+", prenom: "+docTmp.getString("prenom")
 						+", login: "+docTmp.getString("login")
 						+", nombre de comptes courants :"+Integer.toString(listCompteCourant.size())
