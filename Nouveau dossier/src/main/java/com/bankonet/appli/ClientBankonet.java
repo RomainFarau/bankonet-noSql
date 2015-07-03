@@ -10,6 +10,7 @@ import org.bson.Document;
 import com.bankonet.DAO.ClientDao;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import static com.mongodb.client.model.Filters.*;
 
 public class ClientBankonet {
 	
@@ -17,6 +18,7 @@ public class ClientBankonet {
 	private Scanner scanEntries;
 	private String login, mdp;
 	private Document infosClient;
+	private MongoCollection<Document> clientsCollection;
 	
 	public void launch(){
 		clientDao=new ClientDao();
@@ -30,7 +32,7 @@ public class ClientBankonet {
 			System.out.println("Veuillez entrer votre mot de passe.");
 			mdp=scanEntries.next();
 			
-			MongoCollection<Document> clientsCollection=clientDao.getMongoDb().getCollection("clients");
+			clientsCollection=clientDao.getMongoDb().getCollection("clients");
 			
 			FindIterable<Document> iter=clientsCollection.find();
 			Iterator<Document> it=iter.iterator();
@@ -53,7 +55,8 @@ public class ClientBankonet {
 			System.out.println("***** APPLICATION CLIENT *****");
 			
 			List<String> actions=Arrays.asList("0. Arrêter le programme",
-											"1. Consulter les soldes des comptes");
+											"1. Consulter les soldes des comptes",
+											"2. Effectuer un dépôt");
 
 			for (String string : actions) {
 				System.out.println(string);
@@ -75,6 +78,9 @@ public class ClientBankonet {
 					break;
 				case 1:
 					checkSoldeAccount();
+					break;
+				case 2:
+					effectuerDepot();
 					break;
 				default:
 					break;
@@ -105,5 +111,53 @@ public class ClientBankonet {
 						+", solde : "+Integer.toString(document.getInteger("solde")));
 			}
 		}
+	}
+	
+	private void effectuerDepot(){
+		List<Document> listCompteCourant =(List<Document>) infosClient.get("comptesCourants");
+		int cpt=0;
+		if(listCompteCourant!=null){
+			for (Document document : listCompteCourant) {
+				
+				System.out.println("Compte courant "+cpt
+									+", Libelle : "+document.getString("libelle")
+									+", solde : "+Integer.toString(document.getInteger("solde")));
+				cpt++;
+			}
+		}else{
+			System.out.println("Vous n'avez pas de compte courant.");
+		}
+		
+		int compteChoisi=-1;
+		System.out.println("Veuillez choisir un compte à créditer.");
+		while(compteChoisi==-1){
+			//check integer input
+			while(!scanEntries.hasNextInt()){
+				scanEntries.next();
+			}
+			
+			compteChoisi=scanEntries.nextInt();
+			if(compteChoisi>=listCompteCourant.size() || compteChoisi<0){
+				compteChoisi=-1;
+			}
+		}
+		System.out.println("Veuillez saisir un montant à ajouter.");
+		//check integer input
+		while(!scanEntries.hasNextInt()){
+			scanEntries.next();
+		}
+		int credit=scanEntries.nextInt();
+		
+		credit+=listCompteCourant.get(compteChoisi).getInteger("solde");
+
+		listCompteCourant.get(compteChoisi).put("solde", credit);
+		/*clientsCollection.replaceOne({"_id":infosClient.getObjectId("_id")},
+									);*/
+		infosClient.put("comptesCourant", listCompteCourant.get(compteChoisi));
+		
+		clientsCollection.replaceOne(eq("_id",infosClient.getObjectId("_id")),
+									infosClient);
+		
+		System.out.println("Nouveau solde : "+Integer.toString(credit));
 	}
 }
