@@ -15,6 +15,8 @@ public class ClientBankonet {
 	
 	private ClientDao clientDao;
 	private Scanner scanEntries;
+	private String login, mdp;
+	private Document infosClient;
 	
 	public void launch(){
 		clientDao=new ClientDao();
@@ -23,21 +25,20 @@ public class ClientBankonet {
 	
 		while(!connexionOk){
 			System.out.println("Veuillez entrer votre login.");
-			String login=scanEntries.next();
+			login=scanEntries.next();
 			
 			System.out.println("Veuillez entrer votre mot de passe.");
-			String mdp=scanEntries.next();
+			mdp=scanEntries.next();
 			
 			MongoCollection<Document> clientsCollection=clientDao.getMongoDb().getCollection("clients");
 			
 			FindIterable<Document> iter=clientsCollection.find();
 			Iterator<Document> it=iter.iterator();
 			
-			Document docTmp;
 			while(it.hasNext()){
-				docTmp=it.next();
-				if(login.equals(docTmp.getString("login"))){				
-					if(mdp.equals(docTmp.getString("password"))){
+				infosClient=it.next();
+				if(login.equals(infosClient.getString("login"))){				
+					if(mdp.equals(infosClient.getString("password"))){
 						connexionOk=true;
 						break;
 					}
@@ -73,7 +74,7 @@ public class ClientBankonet {
 					stopClientProgram();
 					break;
 				case 1:
-					//checkSoldeAccount();
+					checkSoldeAccount();
 					break;
 				default:
 					break;
@@ -89,5 +90,20 @@ public class ClientBankonet {
 		System.exit(0);
 	}
 	
-	
+	private void checkSoldeAccount(){
+		List<Document> listCompteCourant =(List<Document>) infosClient.get("comptesCourants");
+		if(listCompteCourant!=null){
+			for (Document document : listCompteCourant) {
+				System.out.println("Libelle : "+document.getString("libelle")
+									+", solde : "+Integer.toString(document.getInteger("solde")));
+			}
+		}
+		List<Document> listCompteEpargne =(List<Document>) infosClient.get("comptesEpargne");
+		if(listCompteEpargne!=null){
+			for (Document document : listCompteEpargne) {
+				System.out.println("Libelle : "+document.getString("libelle")
+						+", solde : "+Integer.toString(document.getInteger("solde")));
+			}
+		}
+	}
 }
