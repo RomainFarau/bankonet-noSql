@@ -6,7 +6,11 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bson.Document;
+
 import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 
 public class ConseillerBankonet {
@@ -62,6 +66,20 @@ public class ConseillerBankonet {
 		String login=scanEntries.nextLine();
 		String mdp="secret";
 		
+		MongoDatabase mongoDb=mongoClient.getDatabase("BankonetDB");
+		
+		MongoCollection<Document> personsCollection=mongoDb.getCollection("clients");
+		
+		Document compteCourantDoc=new Document()
+						.append("libelle",nom.toUpperCase()+"_"+prenom.toUpperCase()+"_"+"COURANT_1")
+						.append("solde", 120);
+		
+		Document clientDoc=new Document()
+						.append("nom", nom)
+						.append("prenom", prenom)
+						.append("login", login)
+						.append("password", mdp)
+						.append("comptesCourants", compteCourantDoc);
 		
 		scanEntries.close();
 	}
