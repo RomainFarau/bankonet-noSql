@@ -1,6 +1,7 @@
 package com.bankonet.appli;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -9,6 +10,7 @@ import java.util.logging.Logger;
 import org.bson.Document;
 
 import com.mongodb.MongoClient;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -25,7 +27,8 @@ public class ConseillerBankonet {
 			System.out.println("****** APPLICATION CONSEILLER BANCAIRE ******");
 			
 			List<String> actions=Arrays.asList("0. Arrêter le programme",
-												"1. Ouvrir un compte ");
+												"1. Ouvrir un compte ",
+												"2. Lister tous les clients");
 			
 			for (String string : actions) {
 				System.out.println(string);
@@ -34,9 +37,14 @@ public class ConseillerBankonet {
 			System.out.println("Veuillez choisir une action.");
 			Scanner scanEntries=new Scanner(System.in);
 			
-			String choice=scanEntries.nextLine();
-			scanEntries.close();
-			switch(Integer.getInteger(choice)){
+			//check integer input
+			while(!scanEntries.hasNextInt()){
+				scanEntries.next();
+			}
+			
+			int choice=scanEntries.nextInt();
+			
+			switch(choice){
 				case 0:
 					stopProgram();
 					break;
@@ -59,16 +67,23 @@ public class ConseillerBankonet {
 	private void openAccount(){
 		Scanner scanEntries=new Scanner(System.in);
 		System.out.println("Veuillez entrer votre nom.");
-		String nom=scanEntries.nextLine();
+
+		
+		String nom=scanEntries.next();
+		
 		System.out.println("Veuillez entrer votre prénom.");
-		String prenom=scanEntries.nextLine();
+
+		String prenom=scanEntries.next();
+		
 		System.out.println("Veuillez entrer un login.");
-		String login=scanEntries.nextLine();
+
+		String login=scanEntries.next();
+		
 		String mdp="secret";
 		
 		MongoDatabase mongoDb=mongoClient.getDatabase("BankonetDB");
 		
-		MongoCollection<Document> personsCollection=mongoDb.getCollection("clients");
+		MongoCollection<Document> clientsCollection=mongoDb.getCollection("clients");
 		
 		Document compteCourantDoc=new Document()
 						.append("libelle",nom.toUpperCase()+"_"+prenom.toUpperCase()+"_"+"COURANT_1")
@@ -81,6 +96,23 @@ public class ConseillerBankonet {
 						.append("password", mdp)
 						.append("comptesCourants", compteCourantDoc);
 		
-		scanEntries.close();
+		clientsCollection.insertOne(clientDoc);
+		
+		
+		
+		
+	}
+	
+	private void listClient(){
+		MongoCollection<Document> clientsCollection=mongoDb.getCollection("clients");
+		
+		FindIterable<Document> iter=clientsCollection.find();
+		Iterator<Document> it=iter.iterator();
+		
+		Document docTmp;
+		while(it.hasNext()){
+			docTmp=it.next();
+			System.out.println("Nom :"+docTmp.getString("nom")+", prenom: "+docTmp.getString("prenom"));
+		}	
 	}
 }
