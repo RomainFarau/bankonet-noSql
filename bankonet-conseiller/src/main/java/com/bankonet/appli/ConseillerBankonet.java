@@ -19,7 +19,7 @@ public class ConseillerBankonet {
 	private ClientDao dbClient;
 	private Scanner scanEntries;
 	public void launch(){
-		Logger.getLogger("").setLevel(Level.SEVERE);
+		
 		
 		dbClient=new ClientDao();
 		scanEntries=new Scanner(System.in);
@@ -126,19 +126,23 @@ public class ConseillerBankonet {
 					System.out.println("Identifiant :"+docTmp.get("_id")
 								+" Nom :"+docTmp.getString("nom")
 								+", prenom: "+docTmp.getString("prenom")
-								+", login: "+docTmp.getString("login"));
+								+", login: "+docTmp.getString("login")
+								+", nombre de comptes courants : 0"
+								+", nombre de comptes épargnes : 0");
 				}else{
 					System.out.println("Identifiant :"+docTmp.get("_id")
 							+" Nom :"+docTmp.getString("nom")
 							+", prenom: "+docTmp.getString("prenom")
 							+", login: "+docTmp.getString("login")
-							+", nombre de comptes courants :"+Integer.toString(listCompteCourant.size()));
+							+", nombre de comptes courants :"+Integer.toString(listCompteCourant.size())
+							+", nombre de comptes épargnes : 0");
 				}
 			}else if(listCompteCourant==null){
 				System.out.println("Identifiant :"+docTmp.get("_id")
 						+" Nom :"+docTmp.getString("nom")
 						+", prenom: "+docTmp.getString("prenom")
 						+", login: "+docTmp.getString("login")
+						+", nombre de comptes courants : 0"
 						+", nombre de comptes épargnes :"+Integer.toString(listCompteEpargne.size()));
 			}else{
 				System.out.println("Identifiant :"+docTmp.get("_id")
