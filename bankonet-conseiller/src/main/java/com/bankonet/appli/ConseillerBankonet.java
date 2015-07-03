@@ -1,5 +1,6 @@
 package com.bankonet.appli;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -9,6 +10,8 @@ import java.util.logging.Logger;
 
 import org.bson.Document;
 
+import com.bankonet.DAO.ClientDao;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -16,13 +19,15 @@ import com.mongodb.client.MongoDatabase;
 
 
 public class ConseillerBankonet {
-
-	private MongoClient mongoClient;
 	
+	private ClientDao dbClient;
+	private Scanner scanEntries;
 	public void launch(){
 		Logger.getLogger("").setLevel(Level.SEVERE);
 		
-		mongoClient=new MongoClient("localhost");
+		dbClient=new ClientDao();
+		scanEntries=new Scanner(System.in);
+		
 		while(true){
 			System.out.println("****** APPLICATION CONSEILLER BANCAIRE ******");
 			
@@ -35,7 +40,7 @@ public class ConseillerBankonet {
 			}
 			
 			System.out.println("Veuillez choisir une action.");
-			Scanner scanEntries=new Scanner(System.in);
+			
 			
 			//check integer input
 			while(!scanEntries.hasNextInt()){
@@ -51,50 +56,53 @@ public class ConseillerBankonet {
 				case 1:
 					openAccount();
 					break;
+				case 2:
+					listClients();
+					break;
 				default:
 					break;
 			}
 		}
+		
 	}
 	
 	
 	private void stopProgram(){
-		mongoClient.close();
+		scanEntries.close();
+		dbClient.closeClient();
 		System.out.println("Arrêt de l'application");
 		System.exit(0);
 	}
 	
 	private void openAccount(){
-		Scanner scanEntries=new Scanner(System.in);
-		System.out.println("Veuillez entrer votre nom.");
-
 		
+		System.out.println("Veuillez entrer votre nom.");
 		String nom=scanEntries.next();
 		
 		System.out.println("Veuillez entrer votre prénom.");
-
 		String prenom=scanEntries.next();
 		
 		System.out.println("Veuillez entrer un login.");
-
 		String login=scanEntries.next();
 		
 		String mdp="secret";
 		
-		MongoDatabase mongoDb=mongoClient.getDatabase("BankonetDB");
 		
-		MongoCollection<Document> clientsCollection=mongoDb.getCollection("clients");
+		MongoCollection<Document> clientsCollection=dbClient.getMongoDb().getCollection("clients");
 		
 		Document compteCourantDoc=new Document()
 						.append("libelle",nom.toUpperCase()+"_"+prenom.toUpperCase()+"_"+"COURANT_1")
 						.append("solde", 120);
+		
+		List<Document> listDocCompteCourant=new ArrayList<Document>();
+		listDocCompteCourant.add(compteCourantDoc);
 		
 		Document clientDoc=new Document()
 						.append("nom", nom)
 						.append("prenom", prenom)
 						.append("login", login)
 						.append("password", mdp)
-						.append("comptesCourants", compteCourantDoc);
+						.append("comptesCourants", listDocCompteCourant);
 		
 		clientsCollection.insertOne(clientDoc);
 		
@@ -103,16 +111,43 @@ public class ConseillerBankonet {
 		
 	}
 	
-	private void listClient(){
-		MongoCollection<Document> clientsCollection=mongoDb.getCollection("clients");
+	private void listClients(){
+		MongoCollection<Document> clientsCollection=dbClient.getMongoDb().getCollection("clients");
 		
 		FindIterable<Document> iter=clientsCollection.find();
 		Iterator<Document> it=iter.iterator();
 		
 		Document docTmp;
+		List<Document> listCompteCourant;
+		List<Document> listCompteEpargne;
 		while(it.hasNext()){
 			docTmp=it.next();
-			System.out.println("Nom :"+docTmp.getString("nom")+", prenom: "+docTmp.getString("prenom"));
+			
+			listCompteCourant =(List<Document>) docTmp.get("comptesCourants");
+			listCompteEpargne =(List<Document>) docTmp.get("comptesEpargne");
+			if(listCompteEpargne==null){
+				if(listCompteCourant==null){
+					System.out.println("Nom :"+docTmp.getString("nom")
+								+", prenom: "+docTmp.getString("prenom")
+								+", login: "+docTmp.getString("login"));
+				}else{
+					System.out.println("Nom :"+docTmp.getString("nom")
+							+", prenom: "+docTmp.getString("prenom")
+							+", login: "+docTmp.getString("login")
+							+", nombre de comptes courants :"+Integer.toString(listCompteCourant.size()));
+				}
+			}else if(listCompteCourant==null){
+				System.out.println("Nom :"+docTmp.getString("nom")
+						+", prenom: "+docTmp.getString("prenom")
+						+", login: "+docTmp.getString("login")
+						+", nombre de comptes épargnes :"+Integer.toString(listCompteEpargne.size()));
+			}else{
+				System.out.println("Nom :"+docTmp.getString("nom")
+						+", prenom: "+docTmp.getString("prenom")
+						+", login: "+docTmp.getString("login")
+						+", nombre de comptes courants :"+Integer.toString(listCompteCourant.size())
+						+", nombre de comptes épargnes :"+Integer.toString(listCompteEpargne.size()));
+			}
 		}	
 	}
 }
